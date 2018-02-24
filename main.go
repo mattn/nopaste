@@ -54,7 +54,7 @@ func main() {
 	e.GET("/:sha1", func(c echo.Context) error {
 		p := c.Param("sha1")
 		if !re.MatchString(p) {
-			return c.String(http.StatusInternalServerError, "bad request")
+			return c.String(http.StatusBadRequest, "bad request")
 		}
 		b, err := ioutil.ReadFile(filepath.Join(*datadir, p))
 		if err != nil {
