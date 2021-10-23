@@ -1,11 +1,11 @@
 package main
 
-//go:generate statik
-
 import (
 	"crypto/sha1"
+	"embed"
 	"flag"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,24 +15,23 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	_ "github.com/mattn/nopaste/statik"
-	"github.com/rakyll/statik/fs"
 )
 
 var (
 	re      = regexp.MustCompile(`^[a-z0-9]+$`)
 	datadir = flag.String("data", "data", "data directory")
 	addr    = flag.String("addr", ":8989", "server address")
+
+	//go:embed public
+	local embed.FS
 )
 
 func main() {
 	flag.Parse()
 
-	statikFs, err := fs.New()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = os.MkdirAll(*datadir, 0700); err != nil {
+	sub, _ := fs.Sub(local, "public")
+
+	if err := os.MkdirAll(*datadir, 0700); err != nil {
 		log.Fatal(err)
 	}
 
@@ -40,8 +39,8 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/", echo.WrapHandler(http.FileServer(statikFs)))
-	e.GET("/static/*", echo.WrapHandler(http.FileServer(statikFs)))
+	e.GET("/", echo.WrapHandler(http.FileServer(http.FS(sub))))
+	e.GET("/static/*", echo.WrapHandler(http.FileServer(http.FS(sub))))
 	e.POST("/", func(c echo.Context) error {
 		text := c.FormValue("text")
 		b := sha1.Sum([]byte(text))
