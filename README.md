@@ -19,8 +19,6 @@ $ go get github.com/mattn/nopaste
 ## Development
 
 ```
-$ go get github.com/rakyll/statik
-$ go generate
 $ go build
 ```
 
